@@ -2,85 +2,120 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | 日本語
 
-これは Feishu クラウドドキュメントを AI Agent から扱うための、Skill 中心のリポジトリです。
+---
 
-主役は Python スクリプト単体ではありません。
-主役は、すぐに導入して使える Skill です。
+## 日本語
 
-## これは何か
+Feishu/Lark クラウドドキュメントを操作するための**マルチエージェント対応スキルパッケージ**。
 
-- Codex ですぐ使える Feishu ドキュメント Skill
-- 将来的に他の Agent にも移植しやすい Skill パッケージ
-- Skill に同梱された Feishu MCP helper スクリプト
+### 機能
 
-## これは何ではないか
+- 📖 ドキュメントの**読み取り**
+- ✨ Markdown からの**新規作成**
+- ✏️ 複数モードでの**更新**
+- 🔍 権限問題の**診断**
 
-- ローカル MCP サーバーではありません
-- 単なる Python ツール集ではありません
-- 一つの Agent だけに縛られるものでもありません
+### 対応エージェント
 
-Feishu はすでにホスト型 MCP を提供しています:
+| エージェント | 形式 | インストールコマンド |
+|-------------|------|---------------------|
+| [Claude Code](https://claude.ai/code) | `SKILL.md` | `./install.sh claude-code` |
+| [Cursor](https://cursor.com) | `.cursor/rules/*.md` | `./install.sh cursor` |
+| [Roo Code](https://roocode.com) | `.roomodes` | `./install.sh roo-code` |
+| [Windsurf](https://codeium.com/windsurf) | `.windsurfrules` | `./install.sh windsurf` |
 
-- `https://mcp.feishu.cn/mcp`
+### クイックスタート
 
-このリポジトリは、その上で使う Agent 側の Skill をまとめたものです。
+#### 1. Feishu認証情報の取得
 
-## なぜ Skill 優先なのか
+1. [Feishu Open Platform](https://open.feishu.cn) にアクセス
+2. アプリを作成または既存のアプリを使用
+3. `App ID` と `App Secret` を取得
 
-スクリプト自体は誰でも書けます。
-でも現場で再利用しやすいのは次のようなものです。
+#### 2. スキルのインストール
 
-- 明確な Skill の入口
-- 安全なデフォルト手順
-- 再利用しやすい説明
-- 統一された環境変数
-- Agent がそのまま使える構成
+```bash
+# リポジトリをクローン
+git clone https://github.com/gallifreyCar/feishu-doc-mcp-skill.git
+cd feishu-doc-mcp-skill
 
-## 現在のフォーカス
-
-今は Codex 向け Skill を最初の形として提供します。
-
-含まれるもの:
-
-- Skill 説明
-- Feishu MCP helper スクリプト
-- 多言語ドキュメント
-
-## 構成
-
-```text
-.
-├── README.md
-├── README.zh-CN.md
-├── README.ja.md
-├── LICENSE
-├── .gitignore
-├── skill/
-│   ├── SKILL.md
-│   └── scripts/
-│       └── feishu_mcp_doc.py
-└── examples/
-    └── env.example
+# エージェントを選択してインストール
+./install.sh claude-code    # Claude Code
+./install.sh cursor          # Cursor
+./install.sh roo-code        # Roo Code
+./install.sh windsurf        # Windsurf
+./install.sh all             # 全エージェントにインストール
 ```
 
-## クイックスタート
-
-1. Skill を Agent 環境に導入する
-2. Feishu の環境変数を設定する
-3. Feishu ドキュメント操作時に Agent からこの Skill を使う
+#### 3. 環境変数の設定
 
 ```bash
 export FEISHU_APP_ID="your_app_id"
 export FEISHU_APP_SECRET="your_app_secret"
 ```
 
-## スクリプトについて
+#### 4. 使用方法
 
-helper スクリプトは Skill の実行を安定させるために同梱されています。
+AIエージェントにFeishuドキュメントの操作を指示：
 
-ただし主役はスクリプトではありません。
-主役は Skill です。
+> "Feishuドキュメント https://www.feishu.cn/docx/xxx を読んで"
+
+### 更新モード
+
+| モード | 説明 | 使用ケース |
+|--------|------|------------|
+| `append` | 末尾に追加 | 新しいセクションの追加 |
+| `replace_range` | セクションを置換 | 特定部分の更新 |
+| `insert_before` | マッチ前に挿入 | セクション前に追加 |
+| `insert_after` | マッチ後に挿入 | セクション後に追加 |
+| `overwrite` | 完全置換 | ドキュメント全体を再構築 |
+
+### ディレクトリ構成
+
+```
+feishu-doc-mcp-skill/
+├── README.md
+├── install.sh                 # 統合インストーラー
+├── skill/
+│   ├── SKILL.md              # コアスキル定義
+│   └── scripts/
+│       └── feishu_mcp_doc.py # Pythonヘルパー
+└── adapters/
+    ├── claude-code/          # Claude Codeアダプター
+    ├── cursor/               # Cursorアダプター
+    ├── roo-code/             # Roo Codeアダプター
+    └── windsurf/             # Windsurfアダプター
+```
+
+### トラブルシューティング
+
+**Q: 書き込み時に `forbidden` エラー**
+
+A: アプリに書き込み権限がない可能性。確認：
+- アプリが対象ドキュメント/Wikiにアクセス可能か
+- アプリに書き込み権限があるか（読み取りだけではない）
+- ドキュメントがロックされていないか
+
+**Q: 接続確認方法**
+
+A: ヘルパースクリプトを直接実行：
+```bash
+python3 scripts/feishu_mcp_doc.py init
+python3 scripts/feishu_mcp_doc.py tools
+```
+
+---
 
 ## License
 
-MIT
+MIT License - [LICENSE](LICENSE) を参照
+
+## コントリビュート
+
+IssueやPull Requestをお待ちしています！
+
+## リンク
+
+- [Feishu Open Platform](https://open.feishu.cn)
+- [Feishu MCP Documentation](https://open.feishu.cn/document/client-docs/ai-tools/mcp)
+- [Agent Skills Standard](https://agentskills.io)
